@@ -59,7 +59,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: _buildAppBar(),
       body: FutureBuilder(
         future: _dataFetchFuture,
         builder: (ctx, snapshot) {
@@ -73,73 +72,32 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               child: RefreshIndicator(
                 onRefresh: () => _fetchAllData(),
                 color: Colors.indigo,
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    children: [
-                      _buildHeaderSection(formatCurrency),
-                      _buildContentSection(formatCurrency),
-                    ],
-                  ),
+                child: LayoutBuilder(
+                  // Tambahkan LayoutBuilder untuk responsive
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Column(
+                          children: [
+                            _buildHeaderSection(formatCurrency),
+                            _buildContentSection(formatCurrency),
+                            // Kurangi space untuk FAB
+                            SizedBox(height: 80),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             );
           }
         },
       ),
-      floatingActionButton: _buildFloatingActionButton(),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      elevation: 0,
-      backgroundColor: Colors.indigo,
-      automaticallyImplyLeading: false,
-      title: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.account_balance_wallet,
-              color: Colors.white,
-              size: 24,
-            ),
-          ),
-          SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Dashboard Keuangan',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'Kelola keuangan Anda',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-            ],
-          ),
-        ],
-      ),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.notifications_outlined, color: Colors.white),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: Icon(Icons.settings_outlined, color: Colors.white),
-          onPressed: () {},
-        ),
-      ],
     );
   }
 
@@ -275,7 +233,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 (ctx, txData, _) =>
                     _buildDaftarTransaksi(txData, formatCurrency),
           ),
-          SizedBox(height: 100), // Space for FAB
         ],
       ),
     );
@@ -356,28 +313,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildInfoKeuangan(
-              'Pemasukan',
-              data.totalPemasukan,
-              Colors.green,
-              Icons.trending_up,
-              format,
+      child: IntrinsicHeight(
+        // Tambahkan IntrinsicHeight untuk konsistensi tinggi
+        child: Row(
+          children: [
+            Expanded(
+              child: _buildInfoKeuangan(
+                'Pemasukan',
+                data.totalPemasukan,
+                Colors.green,
+                Icons.trending_up,
+                format,
+              ),
             ),
-          ),
-          Container(width: 1, height: 40, color: Colors.grey[300]),
-          Expanded(
-            child: _buildInfoKeuangan(
-              'Pengeluaran',
-              data.totalPengeluaran,
-              Colors.red,
-              Icons.trending_down,
-              format,
+            Container(width: 1, height: 40, color: Colors.grey[300]),
+            Expanded(
+              child: _buildInfoKeuangan(
+                'Pengeluaran',
+                data.totalPengeluaran,
+                Colors.red,
+                Icons.trending_down,
+                format,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -402,12 +362,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
         SizedBox(height: 4),
-        Text(
-          format.format(amount),
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
+        FittedBox(
+          // Tambahkan FittedBox untuk text yang panjang
+          child: Text(
+            format.format(amount),
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
           ),
         ),
       ],
@@ -428,12 +391,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             child: Icon(icon, color: Colors.indigo, size: 20),
           ),
           SizedBox(width: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[800],
+          Expanded(
+            // Tambahkan Expanded untuk mencegah overflow
+            child: Text(
+              title,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[800],
+              ),
             ),
           ),
         ],
@@ -549,12 +515,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 4),
-                        Text(
-                          format.format(dompet.saldoAwal),
-                          style: TextStyle(
-                            color: Colors.indigo[600],
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
+                        FittedBox(
+                          // Tambahkan FittedBox untuk saldo
+                          child: Text(
+                            format.format(dompet.saldoAwal),
+                            style: TextStyle(
+                              color: Colors.indigo[600],
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -642,55 +611,33 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 title: Text(
                   tx.deskripsi,
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  maxLines: 1, // Batasi jumlah baris
+                  overflow: TextOverflow.ellipsis,
                 ),
                 subtitle: Padding(
                   padding: EdgeInsets.only(top: 4),
                   child: Text(
                     tx.kategori.nama,
                     style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                trailing: Text(
-                  '${isPemasukan ? '+' : '-'} ${format.format(tx.jumlah)}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: isPemasukan ? Colors.green : Colors.red,
-                    fontSize: 16,
+                trailing: FittedBox(
+                  // Tambahkan FittedBox untuk trailing
+                  child: Text(
+                    '${isPemasukan ? '+' : '-'} ${format.format(tx.jumlah)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: isPemasukan ? Colors.green : Colors.red,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
             ),
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildFloatingActionButton() {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.indigo.withOpacity(0.3),
-            blurRadius: 15,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.of(context).pushNamed(AddDompetScreen.routeName);
-        },
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        icon: Icon(Icons.add, size: 24),
-        label: Text(
-          'Tambah',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }

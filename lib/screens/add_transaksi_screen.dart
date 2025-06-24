@@ -82,9 +82,40 @@ class _TambahTransaksiScreenState extends State<TambahTransaksiScreen> {
         );
       }
       Navigator.of(context).pop();
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Text('Transaksi berhasil disimpan!'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan transaksi: $error')),
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Gagal menyimpan transaksi: $error')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
       );
     } finally {
       setState(() {
@@ -99,6 +130,16 @@ class _TambahTransaksiScreenState extends State<TambahTransaksiScreen> {
       initialDate: _tanggal,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: _tipe == 'pemasukan' ? Colors.green : Colors.red,
+            ),
+          ),
+          child: child!,
+        );
+      },
     ).then((pickedDate) {
       if (pickedDate == null) {
         return;
@@ -117,144 +158,398 @@ class _TambahTransaksiScreenState extends State<TambahTransaksiScreen> {
       listen: false,
     );
 
+    final theme = Theme.of(context);
+    final primaryColor = _tipe == 'pemasukan' ? Colors.green : Colors.red;
+
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(_id.isEmpty ? 'Tambah Transaksi' : 'Edit Transaksi'),
+        title: Text(
+          _id.isEmpty ? 'Tambah Transaksi' : 'Edit Transaksi',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 20),
+        ),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
       ),
       body:
           _isLoading
-              ? Center(child: CircularProgressIndicator())
+              ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Menyimpan transaksi...',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    ),
+                  ],
+                ),
+              )
               : Form(
                 key: _formKey,
                 child: SingleChildScrollView(
-                  padding: EdgeInsets.all(16.0),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: <Widget>[
-                      TextFormField(
-                        initialValue: _deskripsi,
-                        decoration: InputDecoration(labelText: 'Deskripsi'),
-                        validator:
-                            (value) =>
-                                value!.isEmpty
-                                    ? 'Deskripsi tidak boleh kosong.'
-                                    : null,
-                        onSaved: (value) => _deskripsi = value!,
-                      ),
-                      SizedBox(height: 12),
-                      TextFormField(
-                        initialValue:
-                            _jumlah > 0 ? _jumlah.toStringAsFixed(0) : '',
-                        decoration: InputDecoration(
-                          labelText: 'Jumlah',
-                          prefixText: 'Rp ',
+                    children: [
+                      // Header Card dengan Tipe Transaksi
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: primaryColor,
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(24),
+                            bottomRight: Radius.circular(24),
+                          ),
                         ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value!.isEmpty)
-                            return 'Jumlah tidak boleh kosong.';
-                          if (double.tryParse(value) == null)
-                            return 'Masukkan angka yang valid.';
-                          return null;
-                        },
-                        onSaved: (value) => _jumlah = double.parse(value!),
-                      ),
-                      SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        value: _tipe,
-                        decoration: InputDecoration(
-                          labelText: 'Tipe Transaksi',
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20, 0, 20, 24),
+                          child: Column(
+                            children: [
+                              Icon(
+                                _tipe == 'pemasukan'
+                                    ? Icons.trending_up
+                                    : Icons.trending_down,
+                                color: Colors.white,
+                                size: 48,
+                              ),
+                              SizedBox(height: 12),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ToggleButtons(
+                                  isSelected: [
+                                    _tipe == 'pengeluaran',
+                                    _tipe == 'pemasukan',
+                                  ],
+                                  onPressed: (index) {
+                                    setState(() {
+                                      _tipe =
+                                          index == 0
+                                              ? 'pengeluaran'
+                                              : 'pemasukan';
+                                      _selectedKategoriId = null;
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  selectedColor: primaryColor,
+                                  fillColor: Colors.white,
+                                  color: Colors.white,
+                                  borderColor: Colors.transparent,
+                                  selectedBorderColor: Colors.transparent,
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.remove_circle_outline),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Pengeluaran',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 24,
+                                        vertical: 12,
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.add_circle_outline),
+                                          SizedBox(width: 8),
+                                          Text(
+                                            'Pemasukan',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        items: [
-                          DropdownMenuItem(
-                            value: 'pengeluaran',
-                            child: Text('Pengeluaran'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'pemasukan',
-                            child: Text('Pemasukan'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          setState(() {
-                            _tipe = value!;
-                            _selectedKategoriId =
-                                null; // Reset pilihan kategori saat tipe berubah
-                          });
-                        },
                       ),
-                      SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        value: _selectedDompetId,
-                        hint: Text('Pilih Dompet'),
-                        decoration: InputDecoration(labelText: 'Dompet'),
-                        items:
-                            dompetProvider.items.map((dompet) {
-                              return DropdownMenuItem(
-                                value: dompet.id,
-                                child: Text(dompet.nama),
-                              );
-                            }).toList(),
-                        onChanged:
-                            (value) =>
-                                setState(() => _selectedDompetId = value),
-                        validator:
-                            (value) =>
-                                value == null ? 'Harap pilih dompet.' : null,
-                      ),
-                      SizedBox(height: 12),
-                      DropdownButtonFormField<String>(
-                        value: _selectedKategoriId,
-                        hint: Text('Pilih Kategori'),
-                        decoration: InputDecoration(labelText: 'Kategori'),
-                        items:
-                            kategoriProvider.items
-                                .where(
-                                  (kat) => kat.tipe == _tipe,
-                                ) // Filter kategori sesuai tipe
-                                .map((kategori) {
-                                  return DropdownMenuItem(
-                                    value: kategori.id,
-                                    child: Text(kategori.nama),
-                                  );
-                                })
-                                .toList(),
-                        onChanged:
-                            (value) =>
-                                setState(() => _selectedKategoriId = value),
-                        validator:
-                            (value) =>
-                                value == null ? 'Harap pilih kategori.' : null,
-                      ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Text(
-                              'Tanggal: ${DateFormat('d MMMM yyyy').format(_tanggal)}',
+
+                      // Form Content
+                      Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: <Widget>[
+                            // Deskripsi Field
+                            _buildFormCard(
+                              child: TextFormField(
+                                initialValue: _deskripsi,
+                                decoration: InputDecoration(
+                                  labelText: 'Deskripsi Transaksi',
+                                  prefixIcon: Icon(
+                                    Icons.description,
+                                    color: primaryColor,
+                                  ),
+                                  border: InputBorder.none,
+                                  labelStyle: TextStyle(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                validator:
+                                    (value) =>
+                                        value!.isEmpty
+                                            ? 'Deskripsi tidak boleh kosong.'
+                                            : null,
+                                onSaved: (value) => _deskripsi = value!,
+                              ),
                             ),
-                          ),
-                          TextButton(
-                            onPressed: _presentDatePicker,
-                            child: Text(
-                              'Pilih Tanggal',
-                              style: TextStyle(fontWeight: FontWeight.bold),
+
+                            SizedBox(height: 16),
+
+                            // Jumlah Field
+                            _buildFormCard(
+                              child: TextFormField(
+                                initialValue:
+                                    _jumlah > 0
+                                        ? _jumlah.toStringAsFixed(0)
+                                        : '',
+                                decoration: InputDecoration(
+                                  labelText: 'Jumlah',
+                                  prefixIcon: Icon(
+                                    Icons.payments,
+                                    color: primaryColor,
+                                  ),
+                                  prefixText: 'Rp ',
+                                  border: InputBorder.none,
+                                  labelStyle: TextStyle(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                keyboardType: TextInputType.number,
+                                validator: (value) {
+                                  if (value!.isEmpty)
+                                    return 'Jumlah tidak boleh kosong.';
+                                  if (double.tryParse(value) == null)
+                                    return 'Masukkan angka yang valid.';
+                                  if (double.parse(value) <= 0)
+                                    return 'Jumlah harus lebih dari 0.';
+                                  return null;
+                                },
+                                onSaved:
+                                    (value) => _jumlah = double.parse(value!),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 20),
-                      ElevatedButton(
-                        onPressed: _submitData,
-                        child: Text('Simpan Transaksi'),
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(vertical: 15),
+
+                            SizedBox(height: 16),
+
+                            // Dompet Dropdown
+                            _buildFormCard(
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedDompetId,
+                                hint: Text(
+                                  'Pilih Dompet',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Dompet',
+                                  prefixIcon: Icon(
+                                    Icons.wallet,
+                                    color: primaryColor,
+                                  ),
+                                  border: InputBorder.none,
+                                  labelStyle: TextStyle(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                items:
+                                    dompetProvider.items.map((dompet) {
+                                      return DropdownMenuItem(
+                                        value: dompet.id,
+                                        child: Text(dompet.nama),
+                                      );
+                                    }).toList(),
+                                onChanged:
+                                    (value) => setState(
+                                      () => _selectedDompetId = value,
+                                    ),
+                                validator:
+                                    (value) =>
+                                        value == null
+                                            ? 'Harap pilih dompet.'
+                                            : null,
+                              ),
+                            ),
+
+                            SizedBox(height: 16),
+
+                            // Kategori Dropdown
+                            _buildFormCard(
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedKategoriId,
+                                hint: Text(
+                                  'Pilih Kategori',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                ),
+                                decoration: InputDecoration(
+                                  labelText: 'Kategori',
+                                  prefixIcon: Icon(
+                                    Icons.category,
+                                    color: primaryColor,
+                                  ),
+                                  border: InputBorder.none,
+                                  labelStyle: TextStyle(
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                items:
+                                    kategoriProvider.items
+                                        .where((kat) => kat.tipe == _tipe)
+                                        .map((kategori) {
+                                          return DropdownMenuItem(
+                                            value: kategori.id,
+                                            child: Text(kategori.nama),
+                                          );
+                                        })
+                                        .toList(),
+                                onChanged:
+                                    (value) => setState(
+                                      () => _selectedKategoriId = value,
+                                    ),
+                                validator:
+                                    (value) =>
+                                        value == null
+                                            ? 'Harap pilih kategori.'
+                                            : null,
+                              ),
+                            ),
+
+                            SizedBox(height: 16),
+
+                            // Date Picker Card
+                            _buildFormCard(
+                              child: InkWell(
+                                onTap: _presentDatePicker,
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.calendar_today,
+                                        color: primaryColor,
+                                      ),
+                                      SizedBox(width: 16),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Tanggal Transaksi',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            SizedBox(height: 4),
+                                            Text(
+                                              DateFormat(
+                                                'EEEE, d MMMM yyyy',
+                                              ).format(_tanggal),
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 16,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: 32),
+
+                            // Submit Button
+                            Container(
+                              height: 56,
+                              child: ElevatedButton(
+                                onPressed: _submitData,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryColor,
+                                  foregroundColor: Colors.white,
+                                  elevation: 2,
+                                  shadowColor: primaryColor.withOpacity(0.3),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.save, size: 24),
+                                    SizedBox(width: 12),
+                                    Text(
+                                      _id.isEmpty
+                                          ? 'Simpan Transaksi'
+                                          : 'Update Transaksi',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            SizedBox(height: 20),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
+    );
+  }
+
+  Widget _buildFormCard({required Widget child}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: child,
     );
   }
 }

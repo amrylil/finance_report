@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import './home_screen.dart';
 import './kategori_list_screen.dart';
 import './transaksi_list_screen.dart';
-import './profile_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   @override
@@ -26,7 +25,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
     DompetListScreen(),
     TransaksiListScreen(),
     KategoriListScreen(),
-    ProfileScreen(),
   ];
 
   final List<NavigationItem> _navigationItems = [
@@ -53,12 +51,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       activeIcon: Icons.category,
       label: 'Kategori',
       color: Colors.purple,
-    ),
-    NavigationItem(
-      icon: Icons.person_outline,
-      activeIcon: Icons.person,
-      label: 'Profil',
-      color: Colors.blue,
     ),
   ];
 
@@ -128,25 +120,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       _currentIndex = index;
     });
 
-    // Animate page transition
-    _pageController.animateToPage(
-      index,
-      duration: Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    // Jump directly to the selected page
+    _pageController.jumpToPage(index);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: false,
       body: PageView(
         controller: _pageController,
         children: _screens,
+        physics: NeverScrollableScrollPhysics(), // Disable swipe navigation
         onPageChanged: (index) {
-          if (_currentIndex != index) {
-            _onTabTapped(index);
-          }
+          // This will only be called programmatically now
+          // No need to call _onTabTapped here as it would create a loop
         },
       ),
       bottomNavigationBar: _buildCustomBottomNavBar(),
@@ -167,7 +154,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       ),
       child: SafeArea(
         child: Container(
-          height: 70,
+          height: 90,
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -185,64 +172,75 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
     final item = _navigationItems[index];
     final isSelected = _currentIndex == index;
 
-    return GestureDetector(
-      onTap: () => _onTabTapped(index),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: isSelected ? item.color.withOpacity(0.1) : Colors.transparent,
-        ),
-        child: AnimatedBuilder(
-          animation: _iconAnimationControllers[index],
-          builder: (context, child) {
-            final animationValue = _iconAnimationControllers[index].value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => _onTabTapped(index),
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color:
+                isSelected ? item.color.withOpacity(0.1) : Colors.transparent,
+          ),
+          child: Center(
+            child: AnimatedBuilder(
+              animation: _iconAnimationControllers[index],
+              builder: (context, child) {
+                final animationValue = _iconAnimationControllers[index].value;
 
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color:
-                        isSelected
-                            ? item.color.withOpacity(0.2 * animationValue)
-                            : Colors.transparent,
-                  ),
-                  child: AnimatedSwitcher(
-                    duration: Duration(milliseconds: 200),
-                    child: Icon(
-                      isSelected ? item.activeIcon : item.icon,
-                      key: ValueKey(isSelected),
-                      size: 24 + (2 * animationValue),
-                      color: isSelected ? item.color : Colors.grey[600],
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color:
+                            isSelected
+                                ? item.color.withOpacity(0.2 * animationValue)
+                                : Colors.transparent,
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: 200),
+                        child: Icon(
+                          isSelected ? item.activeIcon : item.icon,
+                          key: ValueKey(isSelected),
+                          size: 24 + (2 * animationValue),
+                          color: isSelected ? item.color : Colors.grey[600],
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                SizedBox(height: 4),
-                AnimatedDefaultTextStyle(
-                  duration: Duration(milliseconds: 200),
-                  style: TextStyle(
-                    fontSize: isSelected ? 12 : 11,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    color: isSelected ? item.color : Colors.grey[600],
-                  ),
-                  child: Text(item.label, textAlign: TextAlign.center),
-                ),
-                if (isSelected)
-                  Container(
-                    margin: EdgeInsets.only(top: 2),
-                    height: 2,
-                    width: 20 * animationValue,
-                    decoration: BoxDecoration(
-                      color: item.color,
-                      borderRadius: BorderRadius.circular(1),
+                    SizedBox(height: 2),
+                    AnimatedDefaultTextStyle(
+                      duration: Duration(milliseconds: 200),
+                      style: TextStyle(
+                        fontSize: isSelected ? 12 : 11,
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected ? item.color : Colors.grey[600],
+                      ),
+                      child: Text(
+                        item.label,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-              ],
-            );
-          },
+                    if (isSelected)
+                      Container(
+                        margin: EdgeInsets.only(top: 2),
+                        height: 2,
+                        width: 20 * animationValue,
+                        decoration: BoxDecoration(
+                          color: item.color,
+                          borderRadius: BorderRadius.circular(1),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
         ),
       ),
     );

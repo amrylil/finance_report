@@ -790,16 +790,7 @@ class _KategoriListScreenState extends State<KategoriListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(
-          'Daftar Kategori',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-      ),
+
       body: FutureBuilder(
         future: _kategoriFuture,
         builder:

@@ -173,7 +173,7 @@ class _DompetListScreenState extends State<DompetListScreen>
                         Text(
                           dompet == null ? 'Tambah Dompet Baru' : 'Edit Dompet',
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 17,
                             fontWeight: FontWeight.bold,
                             color: Colors.indigo[800],
                           ),
@@ -630,45 +630,6 @@ class _DompetListScreenState extends State<DompetListScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.indigo,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            Icon(Icons.account_balance_wallet, color: Colors.white, size: 28),
-            SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Dompet Saya',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Consumer<DompetProvider>(
-                  builder:
-                      (ctx, dompetData, _) => Text(
-                        '${dompetData.items.length} Dompet',
-                        style: TextStyle(color: Colors.white70, fontSize: 14),
-                      ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              // TODO: Implement search functionality
-            },
-          ),
-        ],
-      ),
       body:
           _isLoading
               ? _buildLoadingState()

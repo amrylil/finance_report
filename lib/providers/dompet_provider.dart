@@ -16,7 +16,6 @@ class DompetProvider with ChangeNotifier {
       notifyListeners();
     } catch (error) {
       _items = [];
-      // Sebaiknya rethrow error agar bisa ditangani di UI jika perlu
       rethrow;
     }
   }
@@ -38,18 +37,15 @@ class DompetProvider with ChangeNotifier {
 
   Future<void> updateDompet(String id, String nama, double saldo) async {
     if (authToken == null) return;
-    // Cari index dari dompet yang akan diupdate
     final dompetIndex = _items.indexWhere((dom) => dom.id == id);
     if (dompetIndex >= 0) {
       try {
-        // Panggil service untuk update ke server
         final updatedDompet = await _dompetService.updateDompet(
           authToken!,
           id,
           nama,
           saldo,
         );
-        // Perbarui item di list lokal
         _items[dompetIndex] = updatedDompet;
         notifyListeners();
       } catch (error) {
